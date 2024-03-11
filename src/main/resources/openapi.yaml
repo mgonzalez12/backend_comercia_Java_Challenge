@@ -1,0 +1,270 @@
+openapi: "3.0.0"
+info:
+  version: "1.0.0"
+  title: "Video Game Rental System API"
+  description: "API for managing video game rentals, prices, and customer loyalty points."
+paths:
+  /games:
+    get:
+      summary: "Get all games in the inventory"
+      responses:
+        '200':
+          description: "List of all games"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Game"
+  /games/{id}:
+    get:
+      summary: "Get a specific game by ID"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: "Game details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Game"
+  /rentals/rent:
+    post:
+      summary: "Rent one or several games and calculate the price"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RentalsGamesItem"
+      responses:
+        '200':
+          description: "Rental information with calculated price"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RentalsResponse"
+  /rentals/return:
+    post:
+      summary: "Return a game and calculate surcharges (if exist)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RentalReturnRequest"
+
+      responses:
+        '200':
+          description: "Rental information with calculated late charges"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RentalReturnResponse"
+
+  /users/create:
+    post:
+      summary: "Create a new user"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientCreate"
+      responses:
+        '201':
+          description: "User created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClienteCreateResponse"
+
+  /users/{id}:
+    get:
+      summary: "Get user details by ID"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: "User details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientSearch"
+
+components:
+  schemas:
+    Game:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "Unique identifier for the game"
+        title:
+          type: string
+          description: "Game title"
+        type:
+          type: string
+          enum: [NEW_RELEASE, STANDARD_GAME, CLASSIC_GAME]
+          description: "Game type (New Release, Standard Game, Classic Game)"
+        premiumPrice:
+          type: number
+          description: "Price per day for New Release games"
+        basicPrice:
+          type: number
+          description: "Base price per day for Standard and Classic games"
+    ClientCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Customer name"
+    ClientSearch:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "Unique identifier for the customer"
+        name:
+          type: string
+          description: "Customer name"
+        loyaltyPoints:
+          type: integer
+          description: "Customer loyalty points"
+        rentals:
+          type: array
+          items:
+            $ref: "#/components/schemas/RentalsListResponse"
+    RentalsGamesItem:
+      type: object
+      properties:
+        idCliente:
+          type: integer
+          format: int64
+          description: "Unique identifier for the customer who rented the game"
+        idJuego:
+          type: integer
+          format: int64
+          description: "Unique identifier for the game"
+        diasAlquilado:
+          type: integer
+          description: "Number of days the game is rented for (requested)"
+        fechaInicio:
+          type: string
+          format: date
+          description: "Start date of the rental"
+    RentalsResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: "Unique identifier for"
+        idCliente:
+          type: integer
+          format: int64
+          description: "Customer identifier"
+        idJuego:
+          type: integer
+          format: int64
+          description: "Game identifier"
+        diasAlquilado:
+          type: integer
+          description: "Number of days the game was actually rented for"
+        fechaInicio:
+          type: string
+          format: date
+          description: "Start date of the rental"
+        fechaFin:
+          type: string
+          format: date
+          description: "End date of the rental (calculated)"
+        precioTotal:
+          type: number
+          description: "Total rental price"
+        recargoRetraso:
+          type: number
+          description: "Total late charge amount"
+        priceTotalRecargos:
+          type: number
+          description: "Sum of total rental price and late charge amount"
+    ClienteCreateResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Customer name"
+    RentalReturnRequest:
+      type: object
+      properties:
+        idAlquiler:  # Changed to idAlquiler for clarity
+          type: integer
+          format: int64
+          description: "Unique identifier for the rental"
+
+    RentalReturnResponse:
+      type: object
+      properties:
+        idCliente:
+          type: integer
+          format: int64
+          description: "Customer identifier"
+        recargos:
+          type: number
+          description: "Total late charge amount"
+        diasAlquilado:
+          type: integer
+          description: "Number of days the game was actually rented for"
+        fechaInicio:
+          type: string
+          format: date
+          description: "Start date of the rental"
+        fechaFin:
+          type: string
+          format: date
+          description: "End date of the rental (calculated)"
+        diasAlquiladosReales:
+          type: integer
+          description: "Number of days the game was actually rented for"
+        precioTotal:
+          type: number
+          description: "Total rental price"
+        priceTotalRecargos:
+          type: number
+          description: "Sum of total rental price and late charge amount"
+    RentalsListResponse:
+      type: object
+      properties:
+        idJuego:
+          type: integer
+          format: int64
+          description: "Game identifier"
+        diasAlquilado:
+          type: integer
+          description: "Number of days the game was actually rented for"
+        fechaInicio:
+          type: string
+          format: date
+          description: "Start date of the rental"
+        fechaFin:
+          type: string
+          format: date
+          description: "End date of the rental (calculated)"
+        precioTotalSinRecargo:
+          type: number
+          description: "Total rental price"
+        recargoRetraso:
+          type: number
+          description: "Total late charge amount"
